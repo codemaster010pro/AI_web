@@ -1,43 +1,51 @@
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
-from langchain_core.messages import SystemMessage, HumanMessage
-from pydantic import BaseModel
+from langchain_core.messages import SystemMessage, HumanMessage , AIMessage
+from pydantic import BaseModel,Field
 from langgraph.graph import StateGraph,END,START
 
 load_dotenv()
 
 llm = ChatGroq(
     model="llama-3.1-8b-instant",
-    temperature=0.3)
+    temperature=0.)
 
 class engine(BaseModel):
     uid:int
     interested_subjects:str
-    response:str = ""
+    response:list = Field(default_factory=list)
+#   user_preference = str
+#   user_history = str
+    
+    
     
 def quiz(state:engine):
     current_uid = state.uid
     current_interested_subjects = state.interested_subjects
+    current_reponse_list = state.response
+#   current_user_preference = state.user_preference
+#   current_user_history = state.user_history
     
     core_prompt = SystemMessage(
         content=(
             "You are an expert AI Diagnostic Tutor for an adaptive learning platform. "
-            "Your goal is to evaluate a student's learning patterns, personality, and preferences. "
-            "\n\nRules:\n"
-            "1. Ask 4 to 6 targeted, short questions to determine if the user prefers "
-            "visual diagrams, hands-on code, deep-dive theory, or quick high-yield summaries.\n"
+            "Your goal is to evaluate a student's learning patterns, personality, and preferences.\n\n"
+            "Rules:\n"
+            "1. Evaluate if the student prefers visual diagrams, hands-on code, deep-dive theory, or quick high-yield summaries.\n"
             "2. Keep your tone encouraging, direct, and conversational.\n"
-            "3. Ask 1 questions at a time so the user isn't overwhelmed.\n"
-            "4. Focus on practical scenarios rather than abstract psychological terms."
+            "3. Ask 1 question at a time with 4 distinct multiple-choice options.\n"
+            "4. Focus on practical learning scenarios rather than abstract psychology terms."
         )
     )
     
     user_reply = HumanMessage(
-        content=f"Student ID: {current_uid}. Current course/subject interest: {current_interested_subjects}. Begin the diagnostic evaluation."
+        content = f"Student ID: {current_uid}. Current course/subject interest: {current_interested_subjects}. Begin the diagnostic evaluation."
     )
     
-    response = llm.invoke([core_prompt,user_reply])
-    return{"response":response.content}
+    response_text = llm.invoke([core_prompt,user_reply]).content
+    ai_messages = AIMessage(response_text)
+    updated_list = current_reponse_list + [ai_messages]
+    return {"response":updated_list}
 
 graph = StateGraph(engine)
 
