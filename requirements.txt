@@ -1,5 +1,8 @@
 langchain-core
 langchain-groq
 dotenv
-ipykernel
 langgraph
+langchain_community
+scrapetube
+youtube_transcript_api
+pytube
