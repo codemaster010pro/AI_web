@@ -1,8 +1,11 @@
 from langchain_groq import ChatGroq
+import operator
 from dotenv import load_dotenv
-from langchain_core.messages import SystemMessage, HumanMessage , AIMessage
-from pydantic import BaseModel,Field
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import BaseMessage
+from typing import TypedDict,Annotated
 from langgraph.graph import StateGraph,END,START
+from langgraph_tools import all_tools
 
 load_dotenv()
 
@@ -10,42 +13,39 @@ llm = ChatGroq(
     model="llama-3.1-8b-instant",
     temperature=0.)
 
-class engine(BaseModel):
+llm_with_tools = llm.bind_tools(all_tools)
+
+class engine(TypedDict):
     uid:int
     interested_subjects:str
-    response:list = Field(default_factory=list)
-#   user_preference = str
-#   user_history = str
+    response:Annotated[list[BaseMessage], operator.add]
     
     
     
 def quiz(state:engine):
-    current_uid = state.uid
-    current_interested_subjects = state.interested_subjects
-    current_reponse_list = state.response
-#   current_user_preference = state.user_preference
-#   current_user_history = state.user_history
+
+
+    prompt = ChatPromptTemplate.from_messages([
+            ("system", (
+                "You are an expert AI Diagnostic Tutor for an adaptive learning platform. "
+                "Your goal is to evaluate a student's learning patterns, personality, and preferences.\n"
+                "Rules:\n"
+                "1. Evaluate if the student prefers visual diagrams, hands-on code, deep-dive theory, or quick high-yield summaries.\n"
+                "2. Keep your tone encouraging, direct, and conversational.\n"
+                "3. Ask 1 question at a time with 4 distinct multiple-choice options.\n"
+                "4. Focus on practical learning scenarios rather than abstract psychology terms."
+            )),
+            ("human", "Student ID: {uid}. Current course/subject interest: {interested_subjects}. Begin the diagnostic evaluation.")
+        ]) 
     
-    core_prompt = SystemMessage(
-        content=(
-            "You are an expert AI Diagnostic Tutor for an adaptive learning platform. "
-            "Your goal is to evaluate a student's learning patterns, personality, and preferences.\n\n"
-            "Rules:\n"
-            "1. Evaluate if the student prefers visual diagrams, hands-on code, deep-dive theory, or quick high-yield summaries.\n"
-            "2. Keep your tone encouraging, direct, and conversational.\n"
-            "3. Ask 1 question at a time with 4 distinct multiple-choice options.\n"
-            "4. Focus on practical learning scenarios rather than abstract psychology terms."
-        )
-    )
+    chain = prompt | llm_with_tools  
     
-    user_reply = HumanMessage(
-        content = f"Student ID: {current_uid}. Current course/subject interest: {current_interested_subjects}. Begin the diagnostic evaluation."
-    )
-    
-    response_text = llm.invoke([core_prompt,user_reply]).content
-    ai_messages = AIMessage(response_text)
-    updated_list = current_reponse_list + [ai_messages]
-    return {"response":updated_list}
+    ai_response = chain.invoke({
+        "uid": state["uid"],
+        "interested_subjects": state["interested_subjects"]
+    })
+
+    return {"response": [ai_response]}
 
 graph = StateGraph(engine)
 

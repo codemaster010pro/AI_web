@@ -29,7 +29,7 @@ def documentation_scrapper(url:str):
         response = requests.get(jina_url,headers=headers,timeout=30)
         
         if response.status_code == 200:
-            return response.text[:2000]
+            return response.text[:3000]
         return f"failed to scrape the content:HTTP status code:{response.status_code}"
     
     except Exception as error:
@@ -85,7 +85,7 @@ def youtube_video_content(youtube_url:str):
         
         transcript_data = YouTubeTranscriptApi.get_transcript(video_id,languages=['en','en-US','en-GB'])
         full_transcript = " ".join([Short_transcript["text"] for Short_transcript in transcript_data])
-        transcript_snippet = full_transcript[:1000]
+        transcript_snippet = full_transcript[:1500]
         return f"title:{title}\nchannel:{channel}\ntranscipt:{transcript_snippet}"
     
     except Exception as error:
