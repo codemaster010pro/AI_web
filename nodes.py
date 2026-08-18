@@ -1,6 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from model import llm
 from schema import engine,evaluation
+from sqlite import save_to_db
     
 evaluation_llm = llm.with_structured_output(evaluation)
     
@@ -48,5 +49,11 @@ def evaluate(state: engine):
 
 def quiz_stop(state: engine):
     if state.get("no_of_questions", 0) >= 6:
+        evaluation = state.get("evaluation_of_user", [])
+        
+        learning_preference = [item.get("learning_preference") for item in evaluation if "learning_preference" in item]
+        dominant_preference = max(set(learning_preference), key=learning_preference.count) if learning_preference else "General"
+        
+        save_to_db(uid=state["uid"], interested_subjects=state["interested_subjects"], learning_preference=dominant_preference, evaluation_list=evaluation)
         return "end"
     return "quiz"
