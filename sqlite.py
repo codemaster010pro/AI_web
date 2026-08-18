@@ -33,3 +33,25 @@ def save_to_db(uid, interested_subjects, learning_preference, evaluation):
     
     conn.commit()
     conn.close()
+    
+def fetch_userdata(uid:int):
+    conn = sqlite3.connect('user.db')
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+                   SELECT interested_subjects, learning_preference, evaluation_of_user_json
+                   FROM user_profiles
+                   WHERE uid = ?
+                   """, (uid,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "interested_subjects": row[0],
+            "learning_preference": row[1],
+            "evaluation_of_user": json.loads(row[2])
+        }
+    else:
+        return None
