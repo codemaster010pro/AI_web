@@ -48,7 +48,7 @@ def evaluate(state: engine):
     return {"evaluation_of_user": [latest_entry]}
 
 def quiz_stop(state: engine):
-    if state.get("no_of_questions", 0) >= 6:
+    if state.get("no_of_questions", 0) >= 7:
         evaluation = state.get("evaluation_of_user", [])
         
         learning_preference = [item.get("learning_preference") for item in evaluation if "learning_preference" in item]
@@ -57,3 +57,38 @@ def quiz_stop(state: engine):
         save_to_db(uid=state["uid"], interested_subjects=state["interested_subjects"], learning_preference=dominant_preference, evaluation_list=evaluation)
         return "end"
     return "quiz"
+
+def tutor_node(uid:int,user_msg:str,chat_history:list):
+    user_profile = save_to_db.fetch_userdata(uid)
+    if user_profile:
+        learning_preference = user_profile["learning_preference"]
+        interested_subjects = user_profile["interested_subjects"]
+    else:
+        learning_preference = "General"
+        interested_subjects = "General topics"
+        
+    system_prompt = f"""
+            You are an expert personalized AI Tutor specializing in {interested_subjects}.
+            The student's primary learning style is: {learning_preference}.
+            
+            Adapt your explanations according to their style:
+            - If 'Hands-on Code': Focus heavily on practical, executable code snippets and examples.
+            - If 'Visual': Use structured diagrams, ASCII flowcharts, and vivid conceptual analogies.
+            - If 'Deep Theory': Provide underlying mechanics, architectural context, and formal explanations.
+            - If 'Quick Summary': Give high-yield bullet points and concise explanations.
+            """
+            
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("human", "{input}")
+        ])
+        
+            
+    chain = prompt | llm
+    response = chain.invoke({
+        "chat_history": chat_history,
+        "input": user_msg
+        })
+            
+    return response
