@@ -16,3 +16,6 @@ class evaluation(BaseModel):
     learning_preference:str = Field(description="Visual, Hands-on Code, Deep Theory, or Quick Summary")
     insights:str = Field(description="Additional insights about the student's learning style and preferences")
     
+class tutor(TypedDict):
+    uid:int
+    messages:Annotated[list[BaseMessage], operator.add]

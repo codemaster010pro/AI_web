@@ -1,8 +1,10 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from model import llm
-from schema import engine,evaluation
+from schema import engine,evaluation,tutor
 from sqlite import save_to_db
-    
+from langgraph_tools import all_tools
+
+llm_with_tools = llm.bind_tools(all_tools)    
 evaluation_llm = llm.with_structured_output(evaluation)
     
 def quiz(state:engine):
@@ -58,8 +60,10 @@ def quiz_stop(state: engine):
         return "end"
     return "quiz"
 
-def tutor_node(uid:int,user_msg:str,chat_history:list):
+def tutor_node(state:tutor):
+    uid = state["uid"]
     user_profile = save_to_db.fetch_userdata(uid)
+    
     if user_profile:
         learning_preference = user_profile["learning_preference"]
         interested_subjects = user_profile["interested_subjects"]
@@ -80,15 +84,12 @@ def tutor_node(uid:int,user_msg:str,chat_history:list):
             
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
-        MessagesPlaceholder(variable_name="chat_history"),
-        ("human", "{input}")
+        MessagesPlaceholder(variable_name="chat_history")
         ])
-        
             
-    chain = prompt | llm
+    chain = prompt | llm_with_tools
     response = chain.invoke({
-        "chat_history": chat_history,
-        "input": user_msg
-        })
+        "chat_history": state["messages"]
+    })
             
-    return response
+    return {"messages": [response]}
