@@ -9,7 +9,7 @@ class engine(TypedDict):
     interested_subjects:str
     response:Annotated[list[BaseMessage], operator.add] 
     no_of_questions:int
-    evaluation_of_user:list[dict]
+    evaluation_of_user:Annotated[list[dict], operator.add] 
     
 class evaluation(BaseModel):
     option_selected:str = Field(description="The option chosen by student (A, B, C, or D)")

@@ -1,12 +1,19 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from model import llm
 from schema import engine,evaluation,tutor
-from sqlite import save_to_db
+from sqlite import save_to_db,fetch_userdata
 from langgraph_tools import all_tools
 
 llm_with_tools = llm.bind_tools(all_tools)    
-evaluation_llm = llm.with_structured_output(evaluation)
+evaluation_llm = llm.with_structured_output(evaluation, method="json_mode")
     
+def extract_text(msg):
+    if hasattr(msg, "content"):
+        return msg.content
+    elif isinstance(msg, (list, tuple)) and len(msg) > 1:
+        return msg[1]
+    return str(msg)
+
 def quiz(state:engine):
 
     prompt = ChatPromptTemplate.from_messages([
@@ -18,11 +25,14 @@ def quiz(state:engine):
                 "2. Keep your tone encouraging, direct, and conversational.\n"
                 "3. Ask 1 question at a time with 4 distinct multiple-choice options.\n"
                 "4. Focus on practical learning scenarios rather than abstract psychology terms."
+                "5. dont use any tools or json format"
+                "6. Do NOT include learning profiles, recaps, summary tables, or progress reflections.\n"
             )),
             MessagesPlaceholder(variable_name="response")
         ]) 
     
-    chain = prompt | llm
+    quiz_llm = llm.bind(tool_choice = "none")
+    chain = prompt | quiz_llm
     ai_response = chain.invoke({
         "response": state["response"],
         "question_number": state.get("no_of_questions", 0) + 1
@@ -32,13 +42,19 @@ def quiz(state:engine):
             "no_of_questions": state.get("no_of_questions", 0) + 1}
 
 def evaluate(state: engine):
-    last_user_input = state["response"][-1].content
-    last_ai_question = state["response"][-2].content
+    if len(state["response"]) < 2:
+        return {"evaluation_of_user": []}
+    
+    last_user_input = extract_text(state["response"][-1])
+    last_ai_question = extract_text(state["response"][-2])  
     
     evaluation_prompt = ChatPromptTemplate.from_messages([
-        ("system", "Analyze the student's answer choice and classify their learning preference."),
-        ("human", "Question Asked:\n{question}\n\nStudent Answer:\n{answer}")
-    ])
+    ("system", 
+     "You are an evaluation engine. Respond strictly in valid JSON format matching the schema.\n"
+     "CRITICAL: You MUST include all schema fields (`score`, `feedback`, `option_selected`, `learning_preference`, `insights`). "
+     "If a field does not apply, provide a default string like 'N/A' or 'None'."),
+    ("human", "Question: {question}\nUser Answer: {answer}")
+])
     
     evaluation_chain = evaluation_prompt | evaluation_llm
     analysis_result : evaluation = evaluation_chain.invoke({
@@ -50,19 +66,20 @@ def evaluate(state: engine):
     return {"evaluation_of_user": [latest_entry]}
 
 def quiz_stop(state: engine):
+    
     if state.get("no_of_questions", 0) >= 7:
         evaluation = state.get("evaluation_of_user", [])
         
         learning_preference = [item.get("learning_preference") for item in evaluation if "learning_preference" in item]
         dominant_preference = max(set(learning_preference), key=learning_preference.count) if learning_preference else "General"
         
-        save_to_db(uid=state["uid"], interested_subjects=state["interested_subjects"], learning_preference=dominant_preference, evaluation_list=evaluation)
+        save_to_db(uid=state["uid"], interested_subjects=state["interested_subjects"], learning_preference=dominant_preference, evaluation=evaluation)
         return "end"
     return "quiz"
 
 def tutor_node(state:tutor):
     uid = state["uid"]
-    user_profile = save_to_db.fetch_userdata(uid)
+    user_profile = fetch_userdata(uid)
     
     if user_profile:
         learning_preference = user_profile["learning_preference"]
