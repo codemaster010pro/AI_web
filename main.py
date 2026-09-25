@@ -44,7 +44,6 @@ Tutor_graph.add_node("tool_node",tool_node)
 Tutor_graph.add_edge(START,"tutor_node")
 Tutor_graph.add_conditional_edges("tutor_node",conditional_node, {
     "tool_node": "tool_node",
-    "tutor_node": "tutor_node",
     "end": END
 })
 Tutor_graph.add_edge("tool_node","tutor_node")
@@ -67,10 +66,12 @@ class chatReq(BaseModel):
 async def run_quiz(req:quizReq):
     config = {"configurable":{"thread_id" : f"quiz_{req.uid}"}}
     
+    subject_list = req.interested_subjects if isinstance(req.interested_subjects, list) else [req.interested_subjects]
+    
     state_input = {
         "uid": req.uid,
         "interested_subjects": req.interested_subjects,
-        "response": [("user", req.user_answer)]
+        "response": [("user", req.user_answer)] if req.user_answer else [],
     }
     
     output = await quiz_graph.ainvoke(state_input, config=config)

@@ -1,11 +1,11 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from model import llm
+from model import llm,fallback_llm
 from schema import engine,evaluation,tutor
 from sqlite import save_to_db,fetch_userdata
 from langgraph_tools import all_tools
 
-llm_with_tools = llm.bind_tools(all_tools)    
-evaluation_llm = llm.with_structured_output(evaluation, method="json_mode")
+llm_with_tools = fallback_llm.bind_tools(all_tools)    
+evaluation_llm = llm.with_structured_output(evaluation,method="json_mode")
     
 def extract_text(msg):
     if hasattr(msg, "content"):
@@ -15,11 +15,20 @@ def extract_text(msg):
     return str(msg)
 
 def quiz(state:engine):
-
+    
+    subject = state.get("interested_subjects",[])
+    if isinstance(subject,list) and len(subject) > 0:
+        current_user_interested_subject = subject[0]
+    elif isinstance(subject,str) and subject:
+        current_user_interested_subject = subject
+    else:
+        current_user_interested_subject = "general programming and technology"
+        
     prompt = ChatPromptTemplate.from_messages([
             ("system", (
                 "You are an expert AI Diagnostic Tutor for an adaptive learning platform. "
                 "Your goal is to evaluate a student's learning patterns, personality, and preferences.\n"
+                f"here is the user's interested subject {current_user_interested_subject}. so ask question related to that subjects\n"
                 "Rules:\n"
                 "1. Evaluate if the student prefers visual diagrams, hands-on code, deep-dive theory, or quick high-yield summaries.\n"
                 "2. Keep your tone encouraging, direct, and conversational.\n"
@@ -82,8 +91,8 @@ def tutor_node(state:tutor):
     user_profile = fetch_userdata(uid)
     
     if user_profile:
-        learning_preference = user_profile["learning_preference"]
-        interested_subjects = user_profile["interested_subjects"]
+         learning_preference = user_profile["learning_preference"]
+         interested_subjects = user_profile["interested_subjects"]
     else:
         learning_preference = "General"
         interested_subjects = "General topics"
@@ -97,6 +106,8 @@ def tutor_node(state:tutor):
             - If 'Visual': Use structured diagrams, ASCII flowcharts, and vivid conceptual analogies.
             - If 'Deep Theory': Provide underlying mechanics, architectural context, and formal explanations.
             - If 'Quick Summary': Give high-yield bullet points and concise explanations.
+            - When referencing external tools, websites, documentation, or videos, ALWAYS include working markdown links formatted as [Resource Name](URL).
+            - Do not mention video links if the learning style specifies text-only, but if the user explicitly requests links, provide markdown hyperlinks.
             """
             
     prompt = ChatPromptTemplate.from_messages([

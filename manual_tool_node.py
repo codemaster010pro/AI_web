@@ -35,14 +35,14 @@ async def tool_node(state:engine):
     return {"response": tool_results}
 
 def conditional_node(state:engine):
-    last_response = state["response"] or []
+    last_response = state.get("response") or state.get("messages", []) or []
     
     if not last_response:
-        return "tutor_node"
+        return "end"
     
     last = last_response[-1]
     
     if hasattr(last, "tool_calls") and last.tool_calls:
         return "tools_node"
-    else:
-        return "end"
+    
+    return "end"
