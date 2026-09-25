@@ -11,3 +11,4 @@ uvicorn
 pydantic
 langchain
 langchain-openrouter
+langchain_tavily
