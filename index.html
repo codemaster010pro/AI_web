@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adaptive Learning AI</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eep2ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body class="h-full text-slate-100 flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-brand-600 to-violet-500 flex items-center justify-center shadow-lg shadow-brand-500/20 text-white">
+          <i class="fa-solid fa-brain text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base tracking-tight text-white flex items-center gap-2">
+            Adaptive Learning AI
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20">v2.0</span>
+          </h1>
+          <p class="text-xs text-slate-400">Personalized AI Diagnostics & Tutoring</p>
+        </div>
+      </div>
+      
+      <div id="user-badge" class="hidden flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-xs text-slate-400">User ID:</span> 
+        <span id="display-uid" class="font-mono text-xs font-bold text-brand-400">1</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+
+    <!-- SETUP VIEW -->
+    <section id="view-setup" class="max-w-md w-full mx-auto">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+        <div class="text-center space-y-3 mb-6">
+          <div class="inline-flex p-3 bg-brand-500/10 text-brand-400 rounded-2xl border border-brand-500/20 mb-1">
+            <i class="fa-solid fa-graduation-cap text-2xl"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Diagnostic Onboarding</h2>
+          <p class="text-slate-400 text-xs sm:text-sm">Configure your target subject to start your learning assessment.</p>
+        </div>
+        
+        <form id="form-setup" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1.5">User ID</label>
+            <input type="number" id="input-uid" value="1" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-brand-500 transition text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1.5">Target Subject</label>
+            <input type="text" id="input-subject" placeholder="e.g. Python Automation, Machine Learning" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-brand-500 transition text-sm">
+          </div>
+          <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 font-semibold py-3.5 rounded-xl text-white shadow-lg shadow-brand-600/25 transition flex items-center justify-center gap-2 text-sm mt-2">
+            <span>Start Diagnostic Quiz</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- QUIZ VIEW WITH EXTRA INPUT FIELD -->
+    <section id="view-quiz" class="hidden space-y-6 max-w-2xl w-full mx-auto">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl space-y-5">
+        
+        <!-- Header & Progress Bar -->
+        <div class="flex justify-between items-center border-b border-slate-800/80 pb-4">
+          <div>
+            <span class="text-[11px] font-bold text-brand-400 uppercase tracking-wider">Diagnostic Evaluation</span>
+            <h3 class="text-lg font-bold text-slate-100 mt-0.5" id="quiz-progress-text">Question 1 of 6</h3>
+          </div>
+          <div class="w-36 bg-slate-950 p-1 border border-slate-800 rounded-full">
+            <div id="quiz-progress-bar" class="bg-gradient-to-r from-brand-600 to-violet-500 h-2 rounded-full w-1/6 transition-all duration-500"></div>
+          </div>
+        </div>
+
+        <!-- Question Prompt Area -->
+        <div id="quiz-stem-container" class="text-slate-200 font-medium text-base sm:text-lg leading-relaxed bg-slate-950/60 p-5 rounded-xl border border-slate-800/80">
+          <div class="flex items-center gap-3 text-slate-400 text-sm">
+            <i class="fa-solid fa-circle-notch animate-spin text-brand-500"></i>
+            <span>Generating question...</span>
+          </div>
+        </div>
+
+        <!-- Optional Extra Text Field -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium uppercase tracking-wider text-slate-400 flex justify-between items-center">
+            <span>Additional Notes / Explanation (Optional)</span>
+            <span class="text-[10px] text-slate-500 font-normal">Appended to your selected answer</span>
+          </label>
+          <div class="flex gap-2">
+            <input type="text" id="input-extra-notes" placeholder="e.g. I prefer hands-on examples because..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-brand-500 transition">
+            <button type="button" onclick="submitCustomTextOnly()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium px-4 rounded-xl text-xs transition flex items-center gap-1.5 shrink-0">
+              <span>Submit Text</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Choice Cards -->
+        <div id="quiz-options-container" class="space-y-3 pt-1">
+          <!-- Interactive option cards will render here -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CHAT TUTOR VIEW -->
+    <section id="view-chat" class="hidden flex-1 flex flex-col h-[calc(100vh-7.5rem)] max-w-4xl w-full mx-auto">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl flex-1 flex flex-col overflow-hidden shadow-2xl backdrop-blur-xl">
+        
+        <div class="px-5 py-3.5 bg-slate-950/60 border-b border-slate-800/80 flex items-center gap-3">
+          <div class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-200 text-sm">Personalized AI Tutor</h3>
+            <p class="text-[11px] text-slate-400">Tailored to your learning profile</p>
+          </div>
+        </div>
+
+        <div id="chat-stream" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm">
+          <div class="flex gap-3 max-w-[85%]">
+            <div class="w-8 h-8 rounded-xl bg-brand-600/20 border border-brand-500/30 flex items-center justify-center text-brand-400 shrink-0">
+              <i class="fa-solid fa-robot text-xs"></i>
+            </div>
+            <div class="bg-slate-950/70 border border-slate-800 p-4 rounded-2xl rounded-tl-none text-slate-300">
+              Your assessment is complete! What topic would you like to explore today?
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3.5 bg-slate-950/80 border-t border-slate-800/80">
+          <form id="form-chat" class="flex gap-2">
+            <input type="text" id="input-chat-message" placeholder="Ask a question." required class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 text-sm focus:outline-none focus:border-brand-500 transition">
+            <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white font-medium px-5 rounded-xl transition flex items-center justify-center gap-2 text-sm shrink-0">
+              <span>Send</span>
+              <i class="fa-solid fa-paper-plane text-xs"></i>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const BASE_URL = "https://adaptive-ai-learning-pw0k.onrender.com";
+    let state = { uid: 1, subject: "", questionNumber: 0 };
+
+    marked.use({ gfm: true, breaks: true });
+
+    const viewSetup = document.getElementById('view-setup');
+    const viewQuiz = document.getElementById('view-quiz');
+    const viewChat = document.getElementById('view-chat');
+    const userBadge = document.getElementById('user-badge');
+    const displayUid = document.getElementById('display-uid');
+    
+    const formSetup = document.getElementById('form-setup');
+    const formChat = document.getElementById('form-chat');
+    
+    const quizStemContainer = document.getElementById('quiz-stem-container');
+    const quizOptionsContainer = document.getElementById('quiz-options-container');
+    const quizProgressBar = document.getElementById('quiz-progress-bar');
+    const quizProgressText = document.getElementById('quiz-progress-text');
+    const chatStream = document.getElementById('chat-stream');
+    const inputExtraNotes = document.getElementById('input-extra-notes');
+
+    function showView(targetView) {
+      viewSetup.classList.add('hidden');
+      viewQuiz.classList.add('hidden');
+      viewChat.classList.add('hidden');
+      targetView.classList.remove('hidden');
+    }
+
+    formSetup.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      state.uid = parseInt(document.getElementById('input-uid').value, 10);
+      state.subject = document.getElementById('input-subject').value;
+
+      displayUid.textContent = state.uid;
+      userBadge.classList.remove('hidden');
+
+      showView(viewQuiz);
+      await fetchNextQuizStep("Initialize assessment profile.");
+    });
+
+    async function submitAnswer(answerText) {
+      const extraNotes = inputExtraNotes.value.trim();
+      let finalSubmission = answerText;
+
+      if (extraNotes) {
+        finalSubmission += ` | Additional User Note: ${extraNotes}`;
+      }
+
+      inputExtraNotes.value = ""; // Reset extra notes field
+
+      quizOptionsContainer.innerHTML = `
+        <div class="text-center py-4 text-slate-400 text-sm">
+          <i class="fa-solid fa-circle-notch animate-spin text-brand-500 mr-2"></i> Submitting answer...
+        </div>`;
+      await fetchNextQuizStep(finalSubmission);
+    }
+
+    async function submitCustomTextOnly() {
+      const extraNotes = inputExtraNotes.value.trim();
+      if (!extraNotes) return;
+
+      inputExtraNotes.value = "";
+      quizOptionsContainer.innerHTML = `
+        <div class="text-center py-4 text-slate-400 text-sm">
+          <i class="fa-solid fa-circle-notch animate-spin text-brand-500 mr-2"></i> Submitting answer...
+        </div>`;
+      await fetchNextQuizStep(extraNotes);
+    }
+
+    function parseAndRenderQuiz(rawText) {
+      const optionRegex = /(?:^|\n)([A-D])[\)\.]\s*(.*?)(?=\n[A-D][\)\.]|\n\n|$)/gs;
+      let matches = [];
+      let match;
+
+      while ((match = optionRegex.exec(rawText)) !== null) {
+        matches.push({ key: match[1], text: match[2].trim() });
+      }
+
+      let stemText = rawText;
+      if (matches.length > 0) {
+        const firstOptionIdx = rawText.search(/(?:^|\n)[A-D][\)\.]/);
+        if (firstOptionIdx !== -1) {
+          stemText = rawText.substring(0, firstOptionIdx).trim();
+        }
+      }
+
+      quizStemContainer.innerHTML = marked.parse(stemText || rawText);
+
+      quizOptionsContainer.innerHTML = "";
+      if (matches.length > 0) {
+        matches.forEach(opt => {
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = "w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-950/40 hover:border-brand-500/60 hover:bg-brand-500/5 transition duration-150 flex items-start gap-3.5 group cursor-pointer";
+          card.onclick = () => submitAnswer(`${opt.key}) ${opt.text}`);
+
+          card.innerHTML = `
+            <span class="w-7 h-7 rounded-lg bg-slate-800 group-hover:bg-brand-600 group-hover:text-white flex items-center justify-center text-xs font-bold text-brand-400 transition shrink-0 mt-0.5">
+              ${opt.key}
+            </span>
+            <span class="text-slate-300 group-hover:text-white text-sm leading-relaxed">${opt.text}</span>
+          `;
+          quizOptionsContainer.appendChild(card);
+        });
+      }
+    }
+
+    async function fetchNextQuizStep(userAnswer) {
+      try {
+        quizStemContainer.innerHTML = `
+          <div class="flex items-center gap-3 text-slate-400 text-sm">
+            <i class="fa-solid fa-circle-notch animate-spin text-brand-500"></i>
+            <span>Evaluating learning patterns...</span>
+          </div>`;
+
+        const response = await fetch(`${BASE_URL}/quiz/next`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: state.uid,
+            interested_subjects: state.subject,
+            user_answer: userAnswer
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.status === 'completed') {
+          showView(viewChat);
+          return;
+        }
+
+        state.questionNumber = data.question_number || 1;
+        quizProgressText.textContent = `Question ${state.questionNumber} of 6`;
+        quizProgressBar.style.width = `${(Math.min(state.questionNumber, 6) / 6) * 100}%`;
+        
+        parseAndRenderQuiz(data.ai_response || "");
+
+      } catch (err) {
+        quizStemContainer.innerHTML = `
+          <div class="text-rose-400 flex items-center gap-2 text-sm">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Server connection failed (${BASE_URL}).</span>
+          </div>`;
+      }
+    }
+
+    // Chat Handler
+    formChat.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const inputMessage = document.getElementById('input-chat-message');
+      const messageText = inputMessage.value;
+      if (!messageText.trim()) return;
+
+      inputMessage.value = "";
+      appendChatMessage('user', messageText);
+      const loadingBubbleId = appendLoadingBubble();
+
+      try {
+        const response = await fetch(`${BASE_URL}/tutor/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: state.uid,
+            message: messageText
+          })
+        });
+
+        const data = await response.json();
+        document.getElementById(loadingBubbleId)?.remove();
+        appendChatMessage('assistant', data.reply);
+
+      } catch (err) {
+        document.getElementById(loadingBubbleId)?.remove();
+        appendChatMessage('assistant', 'Unable to retrieve response from server.');
+      }
+    });
+
+    function appendChatMessage(role, text) {
+      const isUser = role === 'user';
+      const wrapper = document.createElement('div');
+      wrapper.className = `flex gap-3 max-w-[85%] ${isUser ? 'ml-auto flex-row-reverse' : ''}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = `w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+        isUser ? 'bg-purple-600/20 border border-purple-500/30 text-purple-400' : 'bg-brand-600/20 border border-brand-500/30 text-brand-400'
+      }`;
+      avatar.innerHTML = `<i class="fa-solid ${isUser ? 'fa-user' : 'fa-robot'} text-xs"></i>`;
+
+      const content = document.createElement('div');
+      content.className = `p-4 rounded-2xl text-slate-200 leading-relaxed shadow-sm ${
+        isUser 
+          ? 'bg-brand-600 text-white rounded-tr-none' 
+          : 'bg-slate-950/70 border border-slate-800 rounded-tl-none prose prose-invert max-w-none text-xs sm:text-sm'
+      }`;
+      
+      if (isUser) {
+        content.textContent = text;
+      } else {
+        content.innerHTML = marked.parse(text || "");
+        content.querySelectorAll('a').forEach(link => {
+          link.setAttribute('target', '_blank');
+          link.setAttribute('rel', 'noopener noreferrer');
+          link.classList.add('text-brand-400', 'underline');
+        });
+      }
+
+      wrapper.appendChild(avatar);
+      wrapper.appendChild(content);
+      chatStream.appendChild(wrapper);
+      chatStream.scrollTop = chatStream.scrollHeight;
+    }
+
+    function appendLoadingBubble() {
+      const id = `loading-${Date.now()}`;
+      const wrapper = document.createElement('div');
+      wrapper.id = id;
+      wrapper.className = 'flex gap-3 max-w-[85%]';
+      wrapper.innerHTML = `
+        <div class="w-8 h-8 rounded-xl bg-brand-600/20 border border-brand-500/30 flex items-center justify-center text-brand-400 shrink-0">
+          <i class="fa-solid fa-robot text-xs"></i>
+        </div>
+        <div class="bg-slate-950/70 border border-slate-800 p-4 rounded-2xl rounded-tl-none text-slate-400 flex items-center gap-2">
+          <i class="fa-solid fa-circle-notch animate-spin text-brand-500"></i>
+          <span>Processing request...</span>
+        </div>`;
+      chatStream.appendChild(wrapper);
+      chatStream.scrollTop = chatStream.scrollHeight;
+      return id;
+    }
+  </script>
+</body>
+</html>
