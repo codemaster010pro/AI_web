@@ -1,6 +1,5 @@
 from langchain_groq import ChatGroq
 from langchain_openrouter import ChatOpenRouter
-from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from langchain_core.rate_limiters import InMemoryRateLimiter
 
