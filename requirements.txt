@@ -7,3 +7,5 @@ scrapetube
 youtube_transcript_api
 pytube
 fastapi
+uvicorn
+pydantic
