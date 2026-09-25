@@ -12,7 +12,7 @@ from sqlite import save_to_db,fetch_userdata
 app = FastAPI(title = "AI adaptive learning Web App")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins= "https://ai-web-frontend.onrender.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
