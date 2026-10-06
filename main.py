@@ -89,9 +89,9 @@ async def run_quiz(req:quizReq):
     }
     
 @app.post("/api/tutor/chat")
-async def run_tutor(req:chatReq):
-   try:
-        config = {"configurable":{"thread_id" : f"tutor_{req.uid}"}}
+async def run_tutor(req: chatReq):
+    try:
+        config = {"configurable": {"thread_id": f"tutor_{req.uid}"}}
         
         output = await tutor_graph.ainvoke({
             "uid": req.uid,
@@ -102,10 +102,7 @@ async def run_tutor(req:chatReq):
         
         ai_reply = "No response yet."
         for msg in reversed(message_history):
-            if hasattr(msg, "content") and msg.content and getattr(msg, "type", "") == "ai":
-                ai_reply = msg.content
-                break
-            elif isinstance(msg, AIMessage) and msg.content:
+            if isinstance(msg, AIMessage) and msg.content:
                 ai_reply = msg.content
                 break
             elif isinstance(msg, dict):
@@ -116,12 +113,9 @@ async def run_tutor(req:chatReq):
                     break
         
         return {
-            "reply": ai_reply,
-            "response": ai_reply,
-            "message": ai_reply
+            "reply": ai_reply
         }
         
-   except Exception as e:
-       print(e)
-       raise e
-    
+    except Exception as e:
+        print(e)
+        raise e
