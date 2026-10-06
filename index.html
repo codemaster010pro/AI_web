@@ -251,43 +251,41 @@
       await fetchNextQuizStep(extraNotes);
     }
 
-    function parseAndRenderQuiz(rawText) {
-      const optionRegex = /(?:^|\n)([A-D])[\)\.]\s*(.*?)(?=\n[A-D][\)\.]|\n\n|$)/gs;
-      let matches = [];
-      let match;
+function parseAndRenderQuiz(rawText) {
+  let match;
+  const matches = [];
 
-      while ((match = optionRegex.exec(rawText)) !== null) {
-        matches.push({ key: match[1], text: match[2].trim() });
-      }
+  while ((match = optionRegex.exec(rawText)) !== null) {
+    matches.push({ key: match[1], text: match[2].trim() });
+  }
 
-      let stemText = rawText;
-      if (matches.length > 0) {
-        const firstOptionIdx = rawText.search(/(?:^|\n)[A-D][\)\.]/);
-        if (firstOptionIdx !== -1) {
-          stemText = rawText.substring(0, firstOptionIdx).trim();
-        }
-      }
-
-      quizStemContainer.innerHTML = marked.parse(stemText || rawText);
-
-      quizOptionsContainer.innerHTML = "";
-      if (matches.length > 0) {
-        matches.forEach(opt => {
-          const card = document.createElement('button');
-          card.type = 'button';
-          card.className = "w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-950/40 hover:border-brand-500/60 hover:bg-brand-500/5 transition duration-150 flex items-start gap-3.5 group cursor-pointer";
-          card.onclick = () => submitAnswer(`${opt.key}) ${opt.text}`);
-
-          card.innerHTML = `
-            <span class="w-7 h-7 rounded-lg bg-slate-800 group-hover:bg-brand-600 group-hover:text-white flex items-center justify-center text-xs font-bold text-brand-400 transition shrink-0 mt-0.5">
-              ${opt.key}
-            </span>
-            <span class="text-slate-300 group-hover:text-white text-sm leading-relaxed">${opt.text}</span>
-          `;
-          quizOptionsContainer.appendChild(card);
-        });
-      }
+  let stemText = rawText;
+  if (matches.length > 0) {
+    const firstOptionIdx = rawText.search(/(?:^\n)[A-D][\)\.]/);
+    if (firstOptionIdx !== -1) {
+      stemText = rawText.substring(0, firstOptionIdx).trim();
     }
+  }
+
+  quizStemContainer.innerHTML = marked.parse(stemText || rawText);
+
+  quizOptionsContainer.innerHTML = "";
+  if (matches.length > 0) {
+    matches.forEach(opt => {
+      const card = document.createElement('button');
+      
+      const parsedOptionText = typeof marked !== 'undefined' 
+        ? marked.parseInline(opt.text) 
+        : opt.text;
+
+      card.innerHTML = `<span class="font-bold mr-2">${opt.key}.</span> ${parsedOptionText}`;
+      
+      card.className = "w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-800/80 transition flex items-center";
+      
+      quizOptionsContainer.appendChild(card);
+    });
+  }
+}
 
     async function fetchNextQuizStep(userAnswer) {
       try {
