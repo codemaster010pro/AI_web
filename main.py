@@ -105,9 +105,18 @@ async def run_tutor(req:chatReq):
             if isinstance(msg,AIMessage) and msg.content:
                 ai_reply = msg.content
                 break
+            
+            elif isinstance(msg, dict):
+                role = msg.get("type") or msg.get("role")
+                content = msg.get("content") 
+                if role in ["ai","assistant"] and content:
+                    ai_reply = content
+                    break
         
         return {
-            "reply": ai_reply
+            "reply": ai_reply,
+            "response": ai_reply,
+            "message": ai_reply
         }
         
    except Exception as e:
