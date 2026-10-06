@@ -1,8 +1,9 @@
+import os
 import sqlite3
 import json
-
+DB_PATH = "/tmp/user.db" if os.getenv("VERCEL") else "user.db"
 def save_to_db(uid, interested_subjects, learning_preference, evaluation):
-    conn = sqlite3.connect('user.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("PRAGMA foreign_keys = ON")
     
@@ -35,7 +36,7 @@ def save_to_db(uid, interested_subjects, learning_preference, evaluation):
     conn.close()
     
 def fetch_userdata(uid:int):
-    conn = sqlite3.connect('user.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
     cursor.execute("""
