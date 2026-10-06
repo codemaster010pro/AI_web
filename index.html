@@ -329,37 +329,46 @@
       }
     }
 
-    // Chat Handler
     formChat.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const inputMessage = document.getElementById('input-chat-message');
-      const messageText = inputMessage.value;
-      if (!messageText.trim()) return;
+    e.preventDefault();
+    const inputMessage = document.getElementById('input-chat-message');
+    const messageText = inputMessage.value.trim();
+    if (!messageText) return;
 
-      inputMessage.value = "";
-      appendChatMessage('user', messageText);
-      const loadingBubbleId = appendLoadingBubble();
-
-      try {
+    inputMessage.value = "";
+    appendChatMessage('user', messageText);
+    const loadingBubbleId = appendLoadingBubble();
+    
+    try {
         const response = await fetch(`${BASE_URL}/tutor/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            uid: state.uid,
-            message: messageText
-          })
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                uid: state.uid,
+                message: messageText
+            })
         });
 
         const data = await response.json();
         document.getElementById(loadingBubbleId)?.remove();
-        appendChatMessage('assistant', data.reply);
 
-      } catch (err) {
+        // Check if the HTTP response status is ok (200-299)
+        if (!response.ok) {
+            console.error("Backend Error Response:", data);
+            appendChatMessage('assistant', data.detail || 'Server returned an error.');
+            return;
+        }
+
+        const botResponse = data.reply || data.response || data.message || "No response received from tutor.";
+        appendChatMessage('assistant', botResponse);
+
+    } catch (err) {
+        console.error("Fetch Error:", err);
         document.getElementById(loadingBubbleId)?.remove();
         appendChatMessage('assistant', 'Unable to retrieve response from server.');
-      }
-    });
-
+    }
+});
+      
     function appendChatMessage(role, text) {
       const isUser = role === 'user';
       const wrapper = document.createElement('div');
