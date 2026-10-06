@@ -230,7 +230,7 @@
         finalSubmission += ` | Additional User Note: ${extraNotes}`;
       }
 
-      inputExtraNotes.value = ""; // Reset extra notes field
+      inputExtraNotes.value = "";
 
       quizOptionsContainer.innerHTML = `
         <div class="text-center py-4 text-slate-400 text-sm">
@@ -251,41 +251,42 @@
       await fetchNextQuizStep(extraNotes);
     }
 
-function parseAndRenderQuiz(rawText) {
-  let match;
-  const matches = [];
+    function parseAndRenderQuiz(rawText) {
+      const optionRegex = /(?:^|\n)\s*([A-D])[\)\.]\s*(.+?)(?=(?:\n\s*[A-D][\)\.])|$)/gs;
+      let match;
+      const matches = [];
 
-  while ((match = optionRegex.exec(rawText)) !== null) {
-    matches.push({ key: match[1], text: match[2].trim() });
-  }
+      while ((match = optionRegex.exec(rawText)) !== null) {
+        matches.push({ key: match[1], text: match[2].trim() });
+      }
 
-  let stemText = rawText;
-  if (matches.length > 0) {
-    const firstOptionIdx = rawText.search(/(?:^\n)[A-D][\)\.]/);
-    if (firstOptionIdx !== -1) {
-      stemText = rawText.substring(0, firstOptionIdx).trim();
+      let stemText = rawText;
+      if (matches.length > 0) {
+        const firstOptionIdx = rawText.search(/(?:^\n|\n)\s*[A-D][\)\.]/);
+        if (firstOptionIdx !== -1) {
+          stemText = rawText.substring(0, firstOptionIdx).trim();
+        }
+      }
+
+      quizStemContainer.innerHTML = marked.parse(stemText || rawText);
+
+      quizOptionsContainer.innerHTML = "";
+      if (matches.length > 0) {
+        matches.forEach(opt => {
+          const card = document.createElement('button');
+          
+          const parsedOptionText = typeof marked !== 'undefined' 
+            ? marked.parseInline(opt.text) 
+            : opt.text;
+
+          card.innerHTML = `<span class="font-bold mr-2">${opt.key}.</span> ${parsedOptionText}`;
+          card.className = "w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-800/80 transition flex items-center";
+          card.onclick = () => submitAnswer(`${opt.key}) ${opt.text}`);
+          
+          quizOptionsContainer.appendChild(card);
+        });
+      }
     }
-  }
-
-  quizStemContainer.innerHTML = marked.parse(stemText || rawText);
-
-  quizOptionsContainer.innerHTML = "";
-  if (matches.length > 0) {
-    matches.forEach(opt => {
-      const card = document.createElement('button');
-      
-      const parsedOptionText = typeof marked !== 'undefined' 
-        ? marked.parseInline(opt.text) 
-        : opt.text;
-
-      card.innerHTML = `<span class="font-bold mr-2">${opt.key}.</span> ${parsedOptionText}`;
-      
-      card.className = "w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-800/80 transition flex items-center";
-      
-      quizOptionsContainer.appendChild(card);
-    });
-  }
-}
 
     async function fetchNextQuizStep(userAnswer) {
       try {
@@ -328,44 +329,51 @@ function parseAndRenderQuiz(rawText) {
     }
 
     formChat.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const inputMessage = document.getElementById('input-chat-message');
-    const messageText = inputMessage.value.trim();
-    if (!messageText) return;
+      e.preventDefault();
+      const inputMessage = document.getElementById('input-chat-message');
+      const messageText = inputMessage.value.trim();
+      if (!messageText) return;
 
-    inputMessage.value = "";
-    appendChatMessage('user', messageText);
-    const loadingBubbleId = appendLoadingBubble();
-    
-    try {
-        const response = await fetch(`${BASE_URL}/tutor/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                uid: state.uid,
-                message: messageText
-            })
-        });
+      inputMessage.value = "";
+      appendChatMessage('user', messageText);
+      const loadingBubbleId = appendLoadingBubble();
+      
+      try {
+          const response = await fetch(`${BASE_URL}/tutor/chat`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  uid: state.uid,
+                  message: messageText
+              })
+          });
 
-        const data = await response.json();
-        document.getElementById(loadingBubbleId)?.remove();
+          const data = await response.json();
+          document.getElementById(loadingBubbleId)?.remove();
 
-        // Check if the HTTP response status is ok (200-299)
-        if (!response.ok) {
-            console.error("Backend Error Response:", data);
-            appendChatMessage('assistant', data.detail || 'Server returned an error.');
-            return;
-        }
+          if (!response.ok) {
+              console.error("Backend Error Response:", data);
+              let errorMessage = 'Server returned an error.';
+              if (typeof data.detail === 'string') {
+                  errorMessage = data.detail;
+              } else if (Array.isArray(data.detail)) {
+                  errorMessage = data.detail.map(item => item.msg || JSON.stringify(item)).join(', ');
+              } else if (data.message || data.error) {
+                  errorMessage = data.message || data.error;
+              }
+              appendChatMessage('assistant', `⚠️ ${errorMessage}`);
+              return;
+          }
 
-        const botResponse = data.reply || data.response || data.message || "No response received from tutor.";
-        appendChatMessage('assistant', botResponse);
+          const botResponse = data.reply || data.response || data.message || "No response received from tutor.";
+          appendChatMessage('assistant', botResponse);
 
-    } catch (err) {
-        console.error("Fetch Error:", err);
-        document.getElementById(loadingBubbleId)?.remove();
-        appendChatMessage('assistant', 'Unable to retrieve response from server.');
-    }
-});
+      } catch (err) {
+          console.error("Fetch Error:", err);
+          document.getElementById(loadingBubbleId)?.remove();
+          appendChatMessage('assistant', 'Unable to retrieve response from server.');
+      }
+    });
       
     function appendChatMessage(role, text) {
       const isUser = role === 'user';
