@@ -12,7 +12,7 @@ from sqlite import save_to_db,fetch_userdata
 app = FastAPI(title = "AI adaptive learning Web App")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins= "https://ai-web-frontend.onrender.com",
+    allow_origins= ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,7 +62,7 @@ class chatReq(BaseModel):
     uid:int
     message:str
     
-@app.post("/quiz/next")
+@app.post("/api/quiz/next")
 async def run_quiz(req:quizReq):
     config = {"configurable":{"thread_id" : f"quiz_{req.uid}"}}
     
@@ -88,7 +88,7 @@ async def run_quiz(req:quizReq):
         "ai_response": ai_text,
     }
     
-@app.post("/tutor/chat")
+@app.post("/api/tutor/chat")
 async def run_tutor(req:chatReq):
    try:
         config = {"configurable":{"thread_id" : f"tutor_{req.uid}"}}
