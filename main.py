@@ -99,20 +99,24 @@ async def run_tutor(req: chatReq):
             "messages": [HumanMessage(content=req.message)]
         }, config=config)
         
-        message_history = output.get("messages") or output.get("response") or []
+        message_history = []
+        if isinstance(output,dict):
+            message_history = output.get("messages") or output.get("response") or []
+        elif hasattr(output, "messages"):
+            message_history = output.messages
         
-        ai_reply = "No response yet."
+        ai_reply = None
         for msg in reversed(message_history):
             if isinstance(msg, AIMessage) and msg.content:
                 ai_reply = msg.content
                 break
             elif isinstance(msg, dict):
                 role = msg.get("type") or msg.get("role")
-                content = msg.get("content")
-                if role in ["ai", "assistant"] and content:
-                    ai_reply = content
+                if role in ["ai", "assistant"]:
+                    ai_reply = str(msg.get("content")) 
                     break
-        
+        if not ai_reply:
+            ai_reply = "No response from AI."
         return {
             "reply": ai_reply
         }
