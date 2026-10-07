@@ -22,5 +22,4 @@ llm = ChatGroq(
 fallback_llm = ChatOpenRouter(
     model="meta-llama/llama-3.3-70b-instruct",
     temperature = 0,
-    max_tokens = 1000
 )
