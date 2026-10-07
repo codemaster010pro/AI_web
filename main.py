@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlite import save_to_db,fetch_userdata
+from fastapi.responses import JSONResponse
 
 app = FastAPI(title = "AI adaptive learning Web App")
 app.add_middleware(
@@ -117,5 +118,7 @@ async def run_tutor(req: chatReq):
         }
         
     except Exception as e:
-        print(e)
-        raise e
+        return JSONResponse(
+            status_code=500,
+            content={"reply": f"Backend Error: {str(e)}", "detail": str(e)}
+        )
