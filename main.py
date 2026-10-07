@@ -8,7 +8,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlite import save_to_db,fetch_userdata
-from fastapi.responses import JSONResponse
 
 app = FastAPI(title = "AI adaptive learning Web App")
 app.add_middleware(
@@ -90,57 +89,28 @@ async def run_quiz(req:quizReq):
     }
     
 @app.post("/api/tutor/chat")
-async def run_tutor(req: chatReq):
-    try:
-        config = {"configurable": {"thread_id": f"tutor_{req.uid}"}}
+async def run_tutor(req:chatReq):
+   try:
+        config = {"configurable":{"thread_id" : f"tutor_{req.uid}"}}
         
         output = await tutor_graph.ainvoke({
             "uid": req.uid,
             "messages": [HumanMessage(content=req.message)]
         }, config=config)
         
-        print(f"DEBUG tutor_graph output: {output}")
+        message_history = output.get("messages") or output.get("response") or []
         
-        message_history = []
-        if isinstance(output,dict):
-            message_history = output.get("messages") or output.get("response") or []
-        elif hasattr(output, "messages"):
-            message_history = getattr(output, "messages", [])
-        
-        ai_reply = None
+        ai_reply = "No response yet."
         for msg in reversed(message_history):
-            content = None
-            has_tool_calls = False
-            is_ai = False
-
-            if hasattr(msg, "content"):
-                msg_type = getattr(msg, "type", "").lower()
-                class_name = msg.__class__.__name__
-                if msg_type in ["ai", "assistant"] or class_name in ["AIMessage", "AssistantMessage"]:
-                    is_ai = True
-                    content = str(msg.content).strip()
-                    if getattr(msg, "tool_calls", None):
-                        has_tool_calls = True
-                        
-            elif isinstance(msg, dict):
-                role = (msg.get("type") or msg.get("role") or "").lower()
-                if role in ["ai", "assistant"]:
-                    is_ai = True
-                    content = str(msg.get("content", "")).strip()
-                    if msg.get("tool_calls"):
-                        has_tool_calls = True
-
-            if is_ai and content and not has_tool_calls:
-                ai_reply = content
+            if isinstance(msg,AIMessage) and msg.content:
+                ai_reply = msg.content
                 break
-        if not ai_reply:
-            ai_reply = "No response from AI."
+        
         return {
             "reply": ai_reply
         }
         
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"reply": f"Backend Error: {str(e)}", "detail": str(e)}
-        )
+   except Exception as e:
+       print(e)
+       raise e
+    
