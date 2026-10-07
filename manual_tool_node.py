@@ -43,6 +43,6 @@ def conditional_node(state:engine):
     last = last_response[-1]
     
     if hasattr(last, "tool_calls") and last.tool_calls:
-        return "tools_node"
+        return "tool_node"
     
     return "end"
