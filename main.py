@@ -98,23 +98,41 @@ async def run_tutor(req: chatReq):
             "uid": req.uid,
             "messages": [HumanMessage(content=req.message)]
         }, config=config)
+        
         print(f"DEBUG tutor_graph output: {output}")
+        
         message_history = []
         if isinstance(output,dict):
             message_history = output.get("messages") or output.get("response") or []
         elif hasattr(output, "messages"):
-            message_history = output.messages
+            message_history = getattr(output, "messages", [])
         
         ai_reply = None
         for msg in reversed(message_history):
-            if isinstance(msg, AIMessage) and msg.content:
-                ai_reply = msg.content
-                break
+            content = None
+            has_tool_calls = False
+            is_ai = False
+
+            if hasattr(msg, "content"):
+                msg_type = getattr(msg, "type", "").lower()
+                class_name = msg.__class__.__name__
+                if msg_type in ["ai", "assistant"] or class_name in ["AIMessage", "AssistantMessage"]:
+                    is_ai = True
+                    content = str(msg.content).strip()
+                    if getattr(msg, "tool_calls", None):
+                        has_tool_calls = True
+                        
             elif isinstance(msg, dict):
-                role = msg.get("type") or msg.get("role")
+                role = (msg.get("type") or msg.get("role") or "").lower()
                 if role in ["ai", "assistant"]:
-                    ai_reply = str(msg.get("content")) 
-                    break
+                    is_ai = True
+                    content = str(msg.get("content", "")).strip()
+                    if msg.get("tool_calls"):
+                        has_tool_calls = True
+
+            if is_ai and content and not has_tool_calls:
+                ai_reply = content
+                break
         if not ai_reply:
             ai_reply = "No response from AI."
         return {
