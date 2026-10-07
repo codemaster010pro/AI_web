@@ -97,7 +97,7 @@ async def run_tutor(req:chatReq):
             "uid": req.uid,
             "messages": [HumanMessage(content=req.message)]
         }, config=config)
-        
+        print(f"DEBUG tutor_graph output: {output}")
         message_history = output.get("messages") or output.get("response") or []
         
         ai_reply = "No response yet."
