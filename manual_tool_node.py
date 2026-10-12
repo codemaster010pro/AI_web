@@ -24,7 +24,7 @@ async def tool_node(state:tutor):
         called_tool = tools_by_name.get(tool_name)
         
         if called_tool:
-            result = await called_tool.invoke(tool_args)
+            result = await called_tool.ainvoke(tool_args)
             
             tool_results.append(ToolMessage(
                 content=str(result),

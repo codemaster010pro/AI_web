@@ -1,0 +1,35 @@
+[project]
+name = "ai-web"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "codemaster010pro", email = "dhruvanshjariwala@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "dotenv>=0.9.9",
+    "fastapi>=0.141.1",
+    "grandalf>=0.8",
+    "ipykernel>=7.3.0",
+    "langchain>=1.3.14",
+    "langchain-community>=0.4.2",
+    "langchain-core>=1.5.3",
+    "langchain-google-genai>=4.4.0",
+    "langchain-google-vertexai>=3.2.4",
+    "langchain-groq>=1.1.3",
+    "langchain-openrouter>=0.2.9",
+    "langchain-tavily>=0.2.18",
+    "langgraph>=1.2.10",
+    "pytube>=15.0.0",
+    "scrapetube>=2.6.0",
+    "uvicorn>=0.53.0",
+    "youtube-transcript-api>=1.2.4",
+]
+
+[project.scripts]
+ai-web = "ai_web:main"
+
+[build-system]
+requires = ["uv_build>=0.12.1,<0.13.0"]
+build-backend = "uv_build"
