@@ -6,10 +6,10 @@ from langchain_core.messages import ToolMessage
 
 async def tool_node(state:engine):
     tools_by_name = {tool.name: tool for tool in all_tools}
-    messages = state["response"] or state["messages"] or []
+    messages = state.get("response") or state.get("messages") or []
     
     if not messages:
-        return {"response": []}
+        return {"messages": []}
     
     last_message = messages[-1]
     tool_results = []
