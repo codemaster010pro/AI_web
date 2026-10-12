@@ -1,12 +1,12 @@
 from langgraph_tools import all_tools
-from schema import engine
+from schema import tutor
 from langchain_core.messages import ToolMessage
 
 
 
-async def tool_node(state:engine):
+async def tool_node(state:tutor):
     tools_by_name = {tool.name: tool for tool in all_tools}
-    messages = state.get("response") or state.get("messages") or []
+    messages = state.get("response") or state.get("messages")
     
     if not messages:
         return {"messages": []}
@@ -34,8 +34,8 @@ async def tool_node(state:engine):
         
     return {"messages": tool_results}
 
-def conditional_node(state:engine):
-    last_response = state.get("response") or state.get("messages", []) or []
+def conditional_node(state:tutor):
+    last_response = state.get("response") or state.get("messages", [])
     
     if not last_response:
         return "end"

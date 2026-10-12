@@ -97,12 +97,14 @@ async def run_tutor(req:chatReq):
             "uid": req.uid,
             "messages": [HumanMessage(content=req.message)]
         }, config=config)
+        
         print(f"DEBUG tutor_graph output: {output}")
-        message_history = output.get("messages") or output.get("response") or []
+        
+        message_history = output.get("messages") or output.get("response")
         
         ai_reply = "No response yet."
         for msg in reversed(message_history):
-            if isinstance(msg,AIMessage) and msg.content:
+            if isinstance(msg,AIMessage) and msg.content and not getattr(msg, "tool_calls",None):
                 ai_reply = msg.content
                 break
         
