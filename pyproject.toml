@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "codemaster010pro", email = "dhruvanshjariwala@gmail.com" }
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "dotenv>=0.9.9",
     "fastapi>=0.141.1",
