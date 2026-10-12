@@ -21,11 +21,28 @@ async def tool_node(state:engine):
         tool_args = tool.get("args")
         tool_id = tool.get("id")
         
+        if isinstance(tool_args, dict):
+            if "args" in tool_args:
+                nested = tool_args["args"]
+                if isinstance(nested, list) and len(nested) > 0 and isinstance(nested[0], dict):
+                    tool_args = nested[0]
+                elif isinstance(nested, dict):
+                    tool_args = nested
+            
+            for k, v in list(tool_args.items()):
+                if isinstance(v, dict) and k != "args":
+                    if any(param in v for param in ["query", "search_query", "url", "youtube_url"]):
+                        tool_args = v
+                        break
+        
         called_tool = tools_by_name.get(tool_name)
         
         if called_tool:
-            result = await called_tool.invoke(tool_args)
-            
+            try:
+                result = await called_tool.invoke(tool_args)
+            except Exception as e:
+                result = f"Error {tool_name}: {str(e)}"
+                
             tool_results.append(ToolMessage(
                 content=str(result),
                 name=tool_name,
