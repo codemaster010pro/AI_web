@@ -115,7 +115,7 @@ def tutor_node(state:tutor):
         MessagesPlaceholder(variable_name="chat_history")
         ])
             
-    chain = prompt | llm_with_tools
+    chain = prompt | fallback_llm
     response = chain.invoke({
         "chat_history": state["messages"]
     })
