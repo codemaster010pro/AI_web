@@ -12,3 +12,6 @@ this is made by using **langchain/langgraph** with **Fastapi** framework.this pr
 **Backend**:langchain/langgraph,fastapi,groq and openrouter free version model
 
 **Frontend**:Javascript,HTML5
+
+# Decleration for AI
+The whole frontend is made with **AI**.So around 80% percent of Frontend is made by AI but the whole Backend is Human-code(which i wrote). 
