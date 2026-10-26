@@ -36,6 +36,7 @@ def quiz(state:engine):
                 "4. Focus on practical learning scenarios rather than abstract psychology terms."
                 "5. dont use any tools or json format"
                 "6. Do NOT include learning profiles, recaps, summary tables, or progress reflections.\n"
+                "Generate the next multiple-choice question and 4 distinct options (A, B, C, D). "
                 "CRITICAL: The text for each option must contain ONLY the option description itself. "
                 "Do NOT include conversational filler, introductory text, or trailing questions like 'Which one would you pick?' inside the option strings."
             )),
