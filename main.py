@@ -4,10 +4,11 @@ from langgraph.graph import StateGraph,END,START
 from nodes import quiz,evaluate,quiz_stop,tutor_node
 from manual_tool_node import tool_node,conditional_node
 from langgraph.checkpoint.memory import MemorySaver 
-from fastapi import FastAPI
+from fastapi import FastAPI, Header,HTTPException,Depends,status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlite import save_to_db,fetch_userdata
+import os
 
 app = FastAPI(title = "AI adaptive learning Web App")
 app.add_middleware(
@@ -62,7 +63,15 @@ class chatReq(BaseModel):
     uid:int
     message:str
     
-@app.post("/api/quiz/next")
+async def verify_key(x_api_key: str = Header(None)):
+    expected_key = os.getenv("API_SECRET_KEY")
+    if x_api_key and expected_key != expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key"
+        )
+    
+@app.post("/api/quiz/next",dependencies = [Depends(verify_key)])
 async def run_quiz(req:quizReq):
     config = {"configurable":{"thread_id" : f"quiz_{req.uid}"}}
     
@@ -88,7 +97,7 @@ async def run_quiz(req:quizReq):
         "ai_response": ai_text,
     }
     
-@app.post("/api/tutor/chat")
+@app.post("/api/tutor/chat",dependencies = [Depends(verify_key)])
 async def run_tutor(req:chatReq):
    try:
         config = {"configurable":{"thread_id" : f"tutor_{req.uid}"}}

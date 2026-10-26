@@ -298,7 +298,10 @@
 
         const response = await fetch(`${BASE_URL}/quiz/next`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': process.env.NEXT_PUBLIC_API_SECRET_KEY
+           },
           body: JSON.stringify({
             uid: state.uid,
             interested_subjects: state.subject,
@@ -341,7 +344,10 @@
       try {
           const response = await fetch(`${BASE_URL}/tutor/chat`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                'X-API-Key': process.env.NEXT_PUBLIC_API_SECRET_KEY
+               },
               body: JSON.stringify({
                   uid: state.uid,
                   message: messageText
