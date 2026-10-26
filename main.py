@@ -4,7 +4,7 @@ from langgraph.graph import StateGraph,END,START
 from nodes import quiz,evaluate,quiz_stop,tutor_node
 from manual_tool_node import tool_node,conditional_node
 from langgraph.checkpoint.memory import MemorySaver 
-from fastapi import FastAPI, Header,HTTPException,Depends,status
+from fastapi import FastAPI,HTTPException,Request,status,Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlite import save_to_db,fetch_userdata
@@ -63,15 +63,20 @@ class chatReq(BaseModel):
     uid:int
     message:str
     
-async def verify_key(x_api_key: str = Header(None)):
-    expected_key = os.getenv("API_SECRET_KEY")
-    if x_api_key and expected_key != expected_key:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API key"
-        )
+async def verify_request_origin(request:Request):
+    referer = request.headers.get("Referer","")
+    origin = request.headers.get("Origin","")
+    allowed_domain = "ai-web-zeta-olive.vercel.app"
     
-@app.post("/api/quiz/next",dependencies = [Depends(verify_key)])
+    if "localhost" in referer or "127.0.0.1" in referer or allowed_domain in referer or allowed_domain in origin:
+        return
+    
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Unauthorized access"    
+    )
+    
+@app.post("/api/quiz/next",dependencies = [Depends(verify_request_origin)])
 async def run_quiz(req:quizReq):
     config = {"configurable":{"thread_id" : f"quiz_{req.uid}"}}
     
@@ -97,7 +102,7 @@ async def run_quiz(req:quizReq):
         "ai_response": ai_text,
     }
     
-@app.post("/api/tutor/chat",dependencies = [Depends(verify_key)])
+@app.post("/api/tutor/chat",dependencies = [Depends(verify_request_origin)])
 async def run_tutor(req:chatReq):
    try:
         config = {"configurable":{"thread_id" : f"tutor_{req.uid}"}}
